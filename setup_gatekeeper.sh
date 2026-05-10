@@ -10,6 +10,8 @@ echo "[+] Configuring iptables for DDoS Rate Limiting (SYN Flood Protect)..."
 # Apply SYN Flood rate limiting on Port 80 (20/s limit, 50 burst)
 sudo iptables -A INPUT -p tcp --dport 80 --syn -m limit --limit 20/s --limit-burst 50 -j ACCEPT
 sudo iptables -A INPUT -p tcp --dport 80 --syn -j DROP
+# Allow Admin Access to Monitoring Dashboard on Port 8080
+sudo iptables -A INPUT -p tcp --dport 8080 -j ACCEPT
 
 # Hardening: Enable kernel-level TCP SYN Cookies
 sudo sysctl -w net.ipv4.tcp_syncookies=1
