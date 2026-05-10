@@ -13,9 +13,12 @@ if ! sudo fail2ban-client ping >/dev/null 2>&1; then
     BANNED_JSON="[]"
 else
     # Gather Data from Fail2ban
-    BANNED_LIST=$(sudo fail2ban-client status sshd | grep "Banned IP list:" | sed -e 's/.*Banned IP list://' -e 's/^[ \t]*//')
-    TOTAL_BANNED=$(sudo fail2ban-client status sshd | grep "Currently banned:" | awk '{print $4}')
-    TOTAL_FAILED=$(sudo fail2ban-client status sshd | grep "Total failed:" | awk '{print $4}')
+    # Using more robust parsing for Ubuntu 24.04
+    STATUS_OUTPUT=$(sudo fail2ban-client status sshd)
+    
+    BANNED_LIST=$(echo "$STATUS_OUTPUT" | grep "Banned IP list:" | sed -e 's/.*Banned IP list://' -e 's/^[ \t]*//')
+    TOTAL_BANNED=$(echo "$STATUS_OUTPUT" | grep "Currently banned:" | grep -oE '[0-9]+' | head -1)
+    TOTAL_FAILED=$(echo "$STATUS_OUTPUT" | grep "Total failed:" | grep -oE '[0-9]+' | head -1)
 
     # Convert list to JSON Array format
     if [ -z "$BANNED_LIST" ]; then
@@ -27,13 +30,13 @@ else
     fi
 fi
 
-# Get active SSH sessions (Compatible with Ubuntu 24.04 ss version)
-ACTIVE_SSH=$(ss -tn state established sport = :22 or dport = :22 2>/dev/null | grep -v Recv-Q | wc -l)
+# Get active SSH sessions (More robust syntax for ss)
+ACTIVE_SSH=$(ss -t -n state established '( sport = :22 or dport = :22 )' 2>/dev/null | grep -v "Recv-Q" | wc -l)
 
 # Ensure target directory exists
 sudo mkdir -p $(dirname "$OUTFILE")
 
-# Write JSON atomically to avoid corruption during reads
+# Write JSON atomically
 cat <<EOF > /tmp/data.json.tmp
 {
   "total_banned": ${TOTAL_BANNED:-0},
@@ -44,4 +47,7 @@ cat <<EOF > /tmp/data.json.tmp
 }
 EOF
 
+# Move and set permissions so Apache (www-data) can read it
 sudo mv /tmp/data.json.tmp $OUTFILE
+sudo chmod 644 $OUTFILE
+sudo chown www-data:www-data $OUTFILE
