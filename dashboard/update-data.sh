@@ -12,11 +12,15 @@ if ! sudo fail2ban-client ping >/dev/null 2>&1; then
     TOTAL_FAILED=0
     BANNED_JSON="[]"
 else
-    # Gather Data from Fail2ban
-    # Using more reliable methods to get numbers
-    TOTAL_BANNED=$(sudo fail2ban-client status sshd | grep "Currently banned:" | awk '{print $NF}')
-    TOTAL_FAILED=$(sudo fail2ban-client status sshd | grep "Total failed:" | awk '{print $NF}')
-    BANNED_LIST=$(sudo fail2ban-client status sshd | grep "Banned IP list:" | sed 's/.*Banned IP list://' | xargs)
+    # Gather Data from Fail2ban - Using more aggressive parsing for Ubuntu 24.04
+    STATUS_OUTPUT=$(sudo fail2ban-client status sshd)
+    
+    # Extract numbers regardless of tabs or spaces
+    TOTAL_BANNED=$(echo "$STATUS_OUTPUT" | grep -i "Currently banned:" | grep -oE '[0-9]+' | tail -1)
+    TOTAL_FAILED=$(echo "$STATUS_OUTPUT" | grep -i "Total failed:" | grep -oE '[0-9]+' | tail -1)
+    
+    # Extract IP list and handle commas/spaces
+    BANNED_LIST=$(echo "$STATUS_OUTPUT" | grep -i "Banned IP list:" | sed 's/.*Banned IP list://' | tr ',' ' ' | xargs)
 
     # Convert list to JSON Array format
     if [ -z "$BANNED_LIST" ]; then
@@ -28,7 +32,7 @@ else
     fi
 fi
 
-# Get active SSH sessions (Using 'who' command - the most reliable way)
+# Get active SSH sessions (Using 'who' - the most reliable way)
 ACTIVE_SSH=$(who | grep -v "tty" | wc -l)
 
 # Ensure target directory exists
@@ -41,7 +45,7 @@ cat <<EOF > /tmp/data.json.tmp
   "total_failed": ${TOTAL_FAILED:-0},
   "banned_ips": $BANNED_JSON,
   "active_ssh": ${ACTIVE_SSH:-0},
-  "last_update": "$(date '+%Y-%m-%d %H:%M:%S')"
+  "last_update": "$(date '+%H:%M:%S')"
 }
 EOF
 
