@@ -360,6 +360,24 @@
             80% { transform: translate(1px, -1px) }
             100% { transform: translate(0) }
         }
+
+        .unban-btn {
+            background: transparent;
+            border: 1px solid var(--accent-success);
+            color: var(--accent-success);
+            padding: 0.4rem 0.8rem;
+            border-radius: 4px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .unban-btn:hover {
+            background: rgba(0, 255, 163, 0.1);
+            box-shadow: 0 0 10px rgba(0, 255, 163, 0.3);
+            border-color: #fff;
+        }
     </style>
 </head>
 <body>
@@ -437,6 +455,7 @@
                         <tr>
                             <th>Origin Address (IP)</th>
                             <th>Target Vector</th>
+                            <th>Status</th>
                             <th>Enforcement Action</th>
                         </tr>
                     </thead>
@@ -508,6 +527,11 @@
                                 </td>
                                 <td>SSHD (Port 22)</td>
                                 <td><span class="status-cell">QUARANTINED</span></td>
+                                <td>
+                                    <button class="unban-btn" onclick="unbanIP('${ip}')">
+                                        RELEASE
+                                    </button>
+                                </td>
                             `;
                             list.appendChild(tr);
                         });
@@ -515,7 +539,7 @@
                 } else {
                     list.innerHTML = `
                         <tr>
-                            <td colspan="3">
+                            <td colspan="4">
                                 <div class="empty-state">
                                     <svg class="empty-icon" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
                                     <p>NO ACTIVE THREATS DETECTED.</p>
@@ -531,6 +555,28 @@
 
         fetchData();
         setInterval(fetchData, 2000);
+
+        async function unbanIP(ip) {
+            if (!confirm(`Are you sure you want to release IP ${ip} from quarantine?`)) return;
+            
+            try {
+                const response = await fetch('api.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'unban', ip: ip })
+                });
+                const result = await response.json();
+                if (result.success) {
+                    alert(result.message);
+                    fetchData();
+                } else {
+                    alert('Command Failed: ' + result.message);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('CRITICAL: Failed to connect to Gatekeeper Control API.');
+            }
+        }
     </script>
 </body>
 </html>
