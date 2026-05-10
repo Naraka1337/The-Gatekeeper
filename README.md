@@ -1,83 +1,55 @@
-# 🛡️ The Secure Gatekeeper (SOC Dashboard)
-**Advanced Threat Mitigation & Real-Time Monitoring System**
+# The Secure Gatekeeper
+**SOC Monitoring & Network Threat Mitigation**
 
-The Secure Gatekeeper is a production-ready cybersecurity monitoring and mitigation suite designed to protect Ubuntu-based environments from sophisticated network attacks. It integrates kernel-level filtering with application-layer intelligence to provide a high-end, visual SOC (Security Operations Center) experience.
+A security suite for Ubuntu servers that combines Fail2ban log analysis with iptables kernel-level filtering. Features a real-time SOC dashboard for live attack visualization and interactive threat management.
 
----
+## Technical Specifications
+- **L3/L4 Protection**: SYN Flood mitigation via iptables rate-limiting and TCP SYN Cookies.
+- **SSH Hardening**: Automated brute-force detection and IP quarantining.
+- **SOC Dashboard**: Fintech-style monitoring interface served via Apache (Port 8080).
+- **Interactive Control**: PHP-based API for manual IP release (unban) directly from the UI.
+- **Notifications**: Instant Telegram alerts for security enforcement actions.
 
-## 🚀 Key Features
+## Project Structure
+- `init.sh`: Interactive environment configuration and credential setup.
+- `deploy.sh`: Primary deployment script for production environments.
+- `setup_gatekeeper.sh`: Standalone hardening script for quick VM protection.
+- `telegram-alert.sh`: Logic for external notification triggers.
+- `jail.local`: Security policy definitions for Fail2ban.
+- `dashboard/`: SOC frontend and backend data processing.
 
-### 1. Advanced Network Hardening
-*   **SYN Flood Mitigation**: Automated `iptables` rate-limiting and TCP SYN Cookies to prevent connection exhaustion.
-*   **SSH Brute Force Protection**: Deep packet inspection and log analysis via `Fail2ban` to quarantine aggressive IPs.
-*   **TCP Stack Tuning**: Hardened kernel parameters for enhanced network stability during attack conditions.
+## Deployment Guide
 
-### 2. Interactive SOC Dashboard (Port 8080)
-*   **Real-Time Analytics**: Live monitoring of active block rules, attack vectors, and legitimate sessions.
-*   **Fintech-Inspired Design**: Professional-grade, dark-mode glassmorphism interface for high-impact visual presentation.
-*   **Interactive Control**: Ability to manually release (unban) IPs directly from the web interface via a secure PHP API.
-
-### 3. Immediate Response System
-*   **Telegram Alerts**: Instant notification of security breaches, including origin IP and attack duration.
-*   **Automated Quarantining**: Real-time enforcement of ban policies across all network layers.
-
----
-
-## 📂 Project Architecture
-
-```text
-The-Secure-Gatekeeper/
-├── init.sh                # Interactive configuration & setup
-├── deploy.sh              # Main production deployment engine
-├── setup_gatekeeper.sh    # Lightweight VM hardening script
-├── telegram-alert.sh      # Alerting integration logic
-├── jail.local             # Custom security enforcement policies
-└── dashboard/             
-    ├── index.html         # Frontend SOC Interface
-    ├── api.php            # Interactive Control API
-    └── update-data.sh     # Backend data aggregation engine
-```
-
----
-
-## 🛠️ Deployment Instructions
-
-### Prerequisites
-*   Ubuntu Server (18.04+)
-*   Root or Sudo privileges
-*   A Telegram Bot (for notifications)
-
-### Step 1: Initialization
-Transfer the project folder to your server and run the interactive setup:
+### 1. Initialization
+Clone the repository to the target Ubuntu machine and run the setup script:
 ```bash
 chmod +x init.sh
 ./init.sh
 ```
-*This will prompt you for your Telegram API credentials and set the necessary file permissions.*
+Follow the prompts to configure your Telegram API Token and Chat ID.
 
-### Step 2: Deployment
-Execute the main deployment engine:
+### 2. Full Deployment
+Run the main deployment engine to provision Apache, Fail2ban, and the SOC Dashboard:
 ```bash
 sudo ./deploy.sh
 ```
 
-### Step 3: Access
-*   **Main Website**: `http://<SERVER_IP>`
-*   **SOC Dashboard**: `http://<SERVER_IP>:8080`
+### 3. Service Endpoints
+- **Main Web Application**: `http://<SERVER_IP>`
+- **SOC Monitoring Console**: `http://<SERVER_IP>:8080`
+
+## Testing and Validation
+To verify the security layers from an external machine (e.g., Kali Linux):
+
+1. **SSH Brute Force**:
+   `hydra -l root -p 12345 ssh://<SERVER_IP>`
+2. **SYN Flood Simulation**:
+   `sudo hping3 -S -p 80 --flood <SERVER_IP>`
+
+Check the Dashboard (Port 8080) for real-time ban events and log updates.
+
+## Disclaimer
+This project is for educational and authorized monitoring purposes only. Conduct penetration testing only on systems you own or have explicit permission to audit.
 
 ---
-
-## 🧪 Security Lab Testing
-To validate the system using a Kali Linux machine:
-
-1.  **SSH Brute Force**: Run `hydra -l root -p 12345 ssh://<SERVER_IP>` to trigger the ban.
-2.  **SYN Flood**: Run `sudo hping3 -S -p 80 --flood <SERVER_IP>` to test rate limiting.
-3.  **Verification**: Monitor the dashboard on port 8080 to see the system react in real-time.
-
----
-
-## ⚖️ Disclaimer
-This tool is designed for security monitoring and educational purposes. Ensure you have authorized access before conducting any penetration tests.
-
----
-**Developed for Secure Infrastructure Monitoring v1.2.0**
+v1.2.0 | SOC Infrastructure Monitoring
