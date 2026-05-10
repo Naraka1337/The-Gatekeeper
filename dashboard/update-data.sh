@@ -12,7 +12,7 @@ TOTAL_BANNED=$(sudo fail2ban-client status sshd | grep "Currently banned:" | awk
 TOTAL_FAILED=$(sudo fail2ban-client status sshd | grep "Total failed:" | awk '{print $4}')
 
 # Get active SSH sessions (excluding the grep command itself)
-ACTIVE_SSH=$(ss -tn state established \'( dport = :22 or sport = :22 )\' 2>/dev/null | grep -v Recv-Q | wc -l)
+ACTIVE_SSH=$(ss -tn state established '( dport = :22 or sport = :22 )' 2>/dev/null | grep -v Recv-Q | wc -l)
 
 # Convert list to JSON Array format
 if [ -z "$BANNED_LIST" ]; then
