@@ -9,13 +9,13 @@ A comprehensive network security project designed to protect web servers and SSH
 - `jail.local`: Custom Fail2ban configuration.
 
 ## How to Deploy
-1. Update `telegram-alert.sh` with your Telegram Bot Token and Chat ID.
-2. Transfer the `The-Secure-Gatekeeper` folder to your Ubuntu VM.
-3. Make the scripts executable:
+1. Transfer the `The-Secure-Gatekeeper` folder to your Ubuntu VM.
+2. Run the initialization script to set up your Telegram credentials:
    ```bash
-   chmod +x deploy.sh telegram-alert.sh setup_gatekeeper.sh
+   chmod +x init.sh
+   ./init.sh
    ```
-4. Run the main deployment script:
+3. Run the main deployment script:
    ```bash
    sudo ./deploy.sh
    ```
