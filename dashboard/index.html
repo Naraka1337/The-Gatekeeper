@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gatekeeper | Security Operations Center</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-base: #050b14;
+            --bg-panel: #0a1321;
+            --bg-panel-hover: #0f1c2f;
+            --accent-primary: #00f0ff;
+            --accent-success: #00ffa3;
+            --accent-danger: #ff2a55;
+            --accent-warning: #ffb800;
+            --text-main: #e2e8f0;
+            --text-muted: #64748b;
+            --border-color: rgba(255, 255, 255, 0.05);
+            --panel-border: rgba(0, 240, 255, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-base);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background-image: 
+                linear-gradient(rgba(0, 240, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 240, 255, 0.03) 1px, transparent 1px);
+            background-size: 30px 30px;
+            background-position: center top;
+            padding: 2rem;
+            overflow-x: hidden;
+        }
+
+        /* Top Bar */
+        .topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto 3rem auto;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 1.5rem;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, rgba(0, 240, 255, 0.2), rgba(0, 255, 163, 0.1));
+            border: 1px solid var(--accent-primary);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 15px rgba(0, 240, 255, 0.2);
+        }
+
+        .logo-text h1 {
+            font-size: 1.2rem;
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: #fff;
+        }
+
+        .logo-text span {
+            font-size: 0.75rem;
+            color: var(--accent-primary);
+            font-family: 'JetBrains Mono', monospace;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .system-status {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            background: rgba(0, 255, 163, 0.05);
+            border: 1px solid rgba(0, 255, 163, 0.2);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            color: var(--accent-success);
+        }
+
+        .pulse-dot {
+            width: 8px;
+            height: 8px;
+            background-color: var(--accent-success);
+            border-radius: 50%;
+            box-shadow: 0 0 10px var(--accent-success);
+            animation: pulse 2s infinite;
+        }
+
+        /* Main Grid */
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 2rem;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .metric-card {
+            background: var(--bg-panel);
+            border: 1px solid var(--panel-border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .metric-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--accent-primary), transparent);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .metric-card:hover {
+            background: var(--bg-panel-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            border-color: rgba(0, 240, 255, 0.3);
+        }
+
+        .metric-card:hover::before {
+            opacity: 1;
+        }
+
+        .metric-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .metric-title {
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .metric-icon {
+            color: var(--accent-primary);
+            opacity: 0.8;
+        }
+
+        .metric-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 3.5rem;
+            font-weight: 700;
+            line-height: 1;
+            margin-bottom: 0.5rem;
+        }
+
+        .val-danger { color: var(--accent-danger); text-shadow: 0 0 20px rgba(255, 42, 85, 0.3); }
+        .val-primary { color: var(--text-main); }
+        .val-success { color: var(--accent-success); text-shadow: 0 0 20px rgba(0, 255, 163, 0.3); }
+
+        .metric-trend {
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .trend-up { color: var(--accent-danger); }
+        .trend-neutral { color: var(--text-muted); }
+
+        /* Log Section */
+        .log-section {
+            background: var(--bg-panel);
+            border: 1px solid var(--panel-border);
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .log-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        .log-title {
+            font-size: 1rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .log-title svg { color: var(--accent-danger); }
+
+        .live-tag {
+            font-size: 0.75rem;
+            padding: 0.25rem 0.5rem;
+            background: rgba(255, 42, 85, 0.1);
+            color: var(--accent-danger);
+            border-radius: 4px;
+            border: 1px solid rgba(255, 42, 85, 0.3);
+            font-family: 'JetBrains Mono', monospace;
+            text-transform: uppercase;
+            animation: pulse-danger 2s infinite;
+        }
+
+        .log-table-container {
+            padding: 0;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .log-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9rem;
+        }
+
+        .log-table th {
+            text-align: left;
+            padding: 1rem 1.5rem;
+            background: rgba(255, 255, 255, 0.02);
+            color: var(--text-muted);
+            font-weight: 500;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .log-table td {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.02);
+            color: var(--text-main);
+        }
+
+        .log-table tr:hover td {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .ip-cell {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .ip-dot {
+            width: 6px; height: 6px;
+            background: var(--accent-danger);
+            border-radius: 50%;
+            box-shadow: 0 0 5px var(--accent-danger);
+        }
+
+        .status-cell {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            background: rgba(255, 42, 85, 0.1);
+            color: var(--accent-danger);
+            font-size: 0.75rem;
+            border: 1px solid rgba(255, 42, 85, 0.2);
+        }
+
+        .empty-state {
+            padding: 3rem;
+            text-align: center;
+            color: var(--text-muted);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .empty-icon {
+            margin-bottom: 1rem;
+            color: var(--accent-success);
+            opacity: 0.5;
+        }
+
+        /* Footer */
+        .footer {
+            margin-top: auto;
+            padding-top: 3rem;
+            text-align: center;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .footer-time { color: var(--accent-primary); }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg-base); }
+        ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.2); }
+
+        @keyframes pulse {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(0, 255, 163, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(0, 255, 163, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(0, 255, 163, 0); }
+        }
+
+        @keyframes pulse-danger {
+            0% { box-shadow: 0 0 0 0 rgba(255, 42, 85, 0.4); }
+            70% { box-shadow: 0 0 0 4px rgba(255, 42, 85, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(255, 42, 85, 0); }
+        }
+
+        /* Utility */
+        .cyber-glitch:hover {
+            animation: glitch 0.3s linear infinite;
+            color: var(--accent-primary);
+        }
+
+        @keyframes glitch {
+            0% { transform: translate(0) }
+            20% { transform: translate(-2px, 1px) }
+            40% { transform: translate(-1px, -1px) }
+            60% { transform: translate(2px, 1px) }
+            80% { transform: translate(1px, -1px) }
+            100% { transform: translate(0) }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="topbar">
+        <div class="logo">
+            <div class="logo-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent-primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                </svg>
+            </div>
+            <div class="logo-text">
+                <h1>Gatekeeper</h1>
+                <span>SOC Environment</span>
+            </div>
+        </div>
+        <div class="system-status">
+            <div class="pulse-dot"></div>
+            <span>SECURE LINK ESTABLISHED</span>
+        </div>
+    </div>
+
+    <div class="container">
+        
+        <div class="metrics-grid">
+            <div class="metric-card">
+                <div class="metric-header">
+                    <span class="metric-title">Active Block Rules</span>
+                    <svg class="metric-icon" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                </div>
+                <div class="metric-value val-danger" id="total-banned">0</div>
+                <div class="metric-trend trend-up">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
+                    <span>Threat IPs Quarantined</span>
+                </div>
+            </div>
+
+            <div class="metric-card">
+                <div class="metric-header">
+                    <span class="metric-title">Total Attack Vectors</span>
+                    <svg class="metric-icon" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>
+                </div>
+                <div class="metric-value val-primary" id="total-failed">0</div>
+                <div class="metric-trend trend-neutral">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    <span>Failed Login Attempts Captured</span>
+                </div>
+            </div>
+
+            <div class="metric-card">
+                <div class="metric-header">
+                    <span class="metric-title">Legitimate Sessions</span>
+                    <svg class="metric-icon" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                </div>
+                <div class="metric-value val-success" id="active-ssh">0</div>
+                <div class="metric-trend trend-neutral">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    <span>Active Authorized SSH Links</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="log-section">
+            <div class="log-header">
+                <div class="log-title">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                    Security Event Log
+                </div>
+                <div class="live-tag">Live Feed</div>
+            </div>
+            
+            <div class="log-table-container">
+                <table class="log-table" id="banned-table">
+                    <thead>
+                        <tr>
+                            <th>Origin Address (IP)</th>
+                            <th>Target Vector</th>
+                            <th>Enforcement Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="banned-list">
+                        <!-- Populated by JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="footer">
+        <div>GATEKEEPER ADVANCED THREAT MITIGATION PROTOCOL v1.2.0</div>
+        <div class="footer-time">SYSTEM CLOCK SYNC: <span id="update-time">--:--:--</span></div>
+    </div>
+
+    <script>
+        // Number Animation
+        function animateValue(id, start, end, duration) {
+            const obj = document.getElementById(id);
+            if (!obj) return;
+            const currentVal = parseInt(obj.innerText) || 0;
+            if (currentVal === end) return;
+            
+            let startTimestamp = null;
+            const step = (timestamp) => {
+                if (!startTimestamp) startTimestamp = timestamp;
+                const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+                const easeOut = 1 - Math.pow(1 - progress, 3); // Cubic ease out
+                obj.innerText = Math.floor(easeOut * (end - start) + start);
+                if (progress < 1) {
+                    window.requestAnimationFrame(step);
+                } else {
+                    obj.innerText = end;
+                }
+            };
+            window.requestAnimationFrame(step);
+        }
+
+        async function fetchData() {
+            try {
+                const response = await fetch('data.json?t=' + new Date().getTime());
+                if (!response.ok) throw new Error('Network response was not ok');
+                const data = await response.json();
+
+                animateValue('total-banned', parseInt(document.getElementById('total-banned').innerText), data.total_banned, 800);
+                animateValue('total-failed', parseInt(document.getElementById('total-failed').innerText), data.total_failed, 800);
+                animateValue('active-ssh', parseInt(document.getElementById('active-ssh').innerText), data.active_ssh, 800);
+                
+                document.getElementById('update-time').innerText = data.last_update;
+
+                const list = document.getElementById('banned-list');
+
+                if (data.banned_ips && data.banned_ips.length > 0 && data.banned_ips[0] !== "") {
+                    const currentIps = Array.from(list.querySelectorAll('.ip-text')).map(el => el.innerText);
+                    const newIps = data.banned_ips;
+                    
+                    if (JSON.stringify(currentIps) !== JSON.stringify(newIps)) {
+                        list.innerHTML = '';
+                        newIps.forEach(ip => {
+                            const tr = document.createElement('tr');
+                            tr.innerHTML = `
+                                <td>
+                                    <div class="ip-cell">
+                                        <div class="ip-dot"></div>
+                                        <span class="ip-text cyber-glitch">${ip}</span>
+                                    </div>
+                                </td>
+                                <td>SSHD (Port 22)</td>
+                                <td><span class="status-cell">QUARANTINED</span></td>
+                            `;
+                            list.appendChild(tr);
+                        });
+                    }
+                } else {
+                    list.innerHTML = `
+                        <tr>
+                            <td colspan="3">
+                                <div class="empty-state">
+                                    <svg class="empty-icon" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+                                    <p>NO ACTIVE THREATS DETECTED.</p>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                }
+            } catch (error) {
+                console.error('Error fetching data:', error);
+            }
+        }
+
+        fetchData();
+        setInterval(fetchData, 2000);
+    </script>
+</body>
+</html>
