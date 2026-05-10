@@ -4,7 +4,7 @@
 # ==============================================================================
 
 echo -e "\e[1;32m[+] Updating system and installing services...\e[0m"
-sudo apt update && sudo apt install apache2 openssh-server fail2ban curl php libapache2-mod-php rsyslog -y
+sudo apt update && sudo apt install apache2 openssh-server fail2ban curl php libapache2-mod-php rsyslog python3-systemd -y
 
 echo -e "\e[1;32m[+] Copying configurations from IDE Workspace...\e[0m"
 # Install and authorize the alert script
@@ -12,7 +12,19 @@ sudo cp telegram-alert.sh /usr/local/bin/telegram-alert.sh
 sudo chmod +x /usr/local/bin/telegram-alert.sh
 
 # Load custom fail2ban jail configurations
-sudo cp jail.local /etc/fail2ban/jail.local
+cat <<EOF | sudo tee /etc/fail2ban/jail.local > /dev/null
+[sshd]
+enabled = true
+port    = ssh
+filter  = sshd
+backend = systemd
+maxretry = 3
+findtime = 10m
+bantime  = 1h
+# Simple action to test ban first
+action = iptables-multiport[name=SSH, port="ssh", protocol=tcp]
+         shell[actionban="/usr/local/bin/telegram-alert.sh <ip>"]
+EOF
 
 echo -e "\e[1;32m[+] Setting up the Web Monitoring Dashboard on Port 8080...\e[0m"
 # Provision Web Monitoring Dashboard to a separate directory
