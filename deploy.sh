@@ -4,7 +4,7 @@
 # ==============================================================================
 
 echo -e "\e[1;32m[+] Updating system and installing services...\e[0m"
-sudo apt update && sudo apt install apache2 openssh-server fail2ban curl php libapache2-mod-php -y
+sudo apt update && sudo apt install apache2 openssh-server fail2ban curl php libapache2-mod-php rsyslog -y
 
 echo -e "\e[1;32m[+] Copying configurations from IDE Workspace...\e[0m"
 # Install and authorize the alert script
@@ -42,6 +42,7 @@ EOF
 
 sudo a2ensite dashboard.conf
 sudo systemctl restart apache2
+
 
 # Register crontab entry for real-time data sync
 (crontab -l 2>/dev/null | grep -v "update-data.sh" ; echo "* * * * * /usr/local/bin/update-data.sh") | crontab -
