@@ -1,0 +1,4 @@
+credentials.txt
+.DS_Store
+*.tmp
+data.json
