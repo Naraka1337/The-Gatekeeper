@@ -4,7 +4,7 @@
 # ==============================================================================
 
 echo -e "\e[1;32m[+] Updating system and installing services...\e[0m"
-sudo apt update && sudo apt install apache2 openssh-server fail2ban curl -y
+sudo apt update && sudo apt install apache2 openssh-server fail2ban curl php libapache2-mod-php -y
 
 echo -e "\e[1;32m[+] Copying configurations from IDE Workspace...\e[0m"
 # Install and authorize the alert script
@@ -18,8 +18,14 @@ echo -e "\e[1;32m[+] Setting up the Web Monitoring Dashboard on Port 8080...\e[0
 # Provision Web Monitoring Dashboard to a separate directory
 sudo mkdir -p /var/www/dashboard
 sudo cp dashboard/index.html /var/www/dashboard/index.html
+sudo cp dashboard/api.php /var/www/dashboard/api.php
 sudo cp dashboard/update-data.sh /usr/local/bin/update-data.sh
 sudo chmod +x /usr/local/bin/update-data.sh
+
+echo -e "\e[1;32m[+] Configuring Sudo Permissions for Dashboard Control...\e[0m"
+# Allow Apache user (www-data) to unban IPs without password
+echo "www-data ALL=(ALL) NOPASSWD: /usr/bin/fail2ban-client unban *" | sudo tee /etc/sudoers.d/gatekeeper > /dev/null
+sudo chmod 0440 /etc/sudoers.d/gatekeeper
 
 # Configure Apache to listen on Port 8080 for the SOC Dashboard
 if ! grep -q "Listen 8080" /etc/apache2/ports.conf; then
