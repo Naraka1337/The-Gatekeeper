@@ -7,4 +7,4 @@ maxretry = 3
 findtime = 10m
 bantime  = 1h
 action = iptables-multiport[name=SSH, port="ssh", protocol=tcp]
-         shell[actionban="/usr/local/bin/telegram-alert.sh <ip>"]
+         telegram

@@ -11,6 +11,13 @@ echo -e "\e[1;32m[+] Copying configurations from IDE Workspace...\e[0m"
 sudo cp telegram-alert.sh /usr/local/bin/telegram-alert.sh
 sudo chmod +x /usr/local/bin/telegram-alert.sh
 
+# Create custom Telegram action
+sudo tee /etc/fail2ban/action.d/telegram.conf > /dev/null <<EOF
+[Definition]
+actionban = /usr/local/bin/telegram-alert.sh <ip>
+actionunban = 
+EOF
+
 # Load custom fail2ban jail configurations
 cat <<EOF | sudo tee /etc/fail2ban/jail.local > /dev/null
 [sshd]
@@ -21,9 +28,8 @@ backend = systemd
 maxretry = 3
 findtime = 10m
 bantime  = 1h
-# Simple action to test ban first
 action = iptables-multiport[name=SSH, port="ssh", protocol=tcp]
-         shell[actionban="/usr/local/bin/telegram-alert.sh <ip>"]
+         telegram
 EOF
 
 echo -e "\e[1;32m[+] Setting up the Web Monitoring Dashboard on Port 8080...\e[0m"
